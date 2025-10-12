@@ -1,12 +1,12 @@
 {
-  "name": "finance-app",
+  "name": "finance-frontend",
   "version": "1.0.0",
   "private": true,
-  "description": "Fullstack Finance Management App (React + Express)",
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"npm run dev --prefix backend\"",
+    "dev": "vite",
     "build": "vite build",
-    "start": "node backend/server.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "lucide-react": "^0.379.0",
@@ -17,7 +17,6 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
-    "concurrently": "^9.0.0",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.7",
     "vite": "^5.4.8"
