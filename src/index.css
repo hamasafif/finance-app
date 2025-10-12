@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-100 text-gray-800 font-sans transition-colors duration-500;
+}
+
+.dark body {
+  @apply bg-gray-900 text-neon-green;
+}
