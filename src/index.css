@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Gaya scrollbar halus */
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #2563eb; /* biru Tailwind */
+    border-radius: 9999px;
+  }
+}
+
+@layer base {
+  html {
+    font-size: 16px; /* Default */
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: 18px; /* Lebih besar di layar besar */
+    }
+  }
+}
+
+
 body {
   @apply bg-gray-100 text-gray-800 font-sans transition-colors duration-500;
 }

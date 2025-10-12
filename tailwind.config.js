@@ -1,18 +1,19 @@
-/** @type {import('tailwindcss').Config} */
+import scrollbar from 'tailwind-scrollbar';
+
 export default {
-  darkMode: "class",
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        neon: {
-          green: "#39ff14",
-        },
+        'neon-green': '#39ff14',
       },
     },
   },
-  plugins: [],
-}
+  plugins: [
+    scrollbar({ nocompatible: true }),
+  ],
+};
