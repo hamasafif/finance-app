@@ -1,37 +1,33 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api";
 
 const InputData = () => {
   const [type, setType] = useState("income");
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
-  const [message, setMessage] = useState(null); // untuk popup pesan
+  const [message, setMessage] = useState(null);
 
-  // Format angka ke Rupiah (misalnya 2000000 → 2.000.000,00)
+  // Format angka ke format rupiah
   const formatRupiah = (value) => {
     if (!value) return "";
-    const number = value.replace(/[^\d]/g, ""); // hapus semua karakter non angka
-    return new Intl.NumberFormat("id-ID").format(parseInt(number)); // tanpa desimal
+    const number = value.replace(/[^\d]/g, "");
+    return new Intl.NumberFormat("id-ID").format(parseInt(number));
   };
-
 
   const handleAmountChange = (e) => {
     let value = e.target.value.replace(/[^\d]/g, "");
-    if (value === "") {
-      setAmount("");
-    } else {
-      setAmount(formatRupiah(value));
-    }
+    if (value === "") setAmount("");
+    else setAmount(formatRupiah(value));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const cleanAmount = parseInt(amount.replace(/[^\d]/g, ""));
 
     try {
-      await axios.post("http://localhost:5000/api/transactions", {
+      await axios.post(`${API_BASE_URL}/transactions`, {
         type,
         desc,
         amount: cleanAmount,
@@ -42,11 +38,10 @@ const InputData = () => {
       setDesc("");
       setAmount("");
       setDate("");
-
-      setTimeout(() => setMessage(null), 3000); // hilang otomatis
     } catch (err) {
       console.error("❌ Gagal simpan data:", err);
       setMessage({ type: "error", text: "❌ Gagal menyimpan data!" });
+    } finally {
       setTimeout(() => setMessage(null), 3000);
     }
   };
@@ -101,7 +96,7 @@ const InputData = () => {
             value={amount}
             onChange={handleAmountChange}
             className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-right font-semibold"
-            placeholder="Contoh: 2.000.000,00"
+            placeholder="Contoh: 2.000.000"
             required
           />
         </div>
@@ -128,13 +123,14 @@ const InputData = () => {
           Simpan Data
         </button>
 
-        {/* Popup pesan */}
+        {/* Pesan sukses / error */}
         {message && (
           <div
-            className={`mt-3 p-3 rounded-md text-sm font-semibold text-center transition-all duration-500 ${message.type === "success"
-              ? "bg-green-100 text-green-800 border border-green-400"
-              : "bg-red-100 text-red-800 border border-red-400"
-              }`}
+            className={`mt-3 p-3 rounded-md text-sm font-semibold text-center transition-all duration-500 ${
+              message.type === "success"
+                ? "bg-green-100 text-green-800 border border-green-400"
+                : "bg-red-100 text-red-800 border border-red-400"
+            }`}
           >
             {message.text}
           </div>

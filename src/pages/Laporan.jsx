@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../api";
 import {
   BarChart,
   Bar,
@@ -16,7 +17,7 @@ const Laporan = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/transactions")
+    fetch(`${API_BASE_URL}/transactions`)
       .then((res) => res.json())
       .then((transactions) => {
         const totalPemasukan = transactions
@@ -34,7 +35,6 @@ const Laporan = () => {
           { name: "Pengeluaran", jumlah: totalPengeluaran },
           { name: "Saldo", jumlah: saldo },
         ]);
-
         setLoading(false);
       })
       .catch((err) => {
@@ -44,11 +44,8 @@ const Laporan = () => {
   }, []);
 
   const formatRupiah = (angka) =>
-    `Rp ${angka.toLocaleString("id-ID", {
-      minimumFractionDigits: 0,
-    })}`;
+    `Rp ${angka.toLocaleString("id-ID", { minimumFractionDigits: 0 })}`;
 
-  // Warna cerah (dan kontras di dark mode)
   const COLORS = ["#00C49F", "#FF6384", "#3B82F6"];
 
   return (
@@ -67,12 +64,7 @@ const Laporan = () => {
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
                 data={data}
-                margin={{
-                  top: 20,
-                  right: 20,
-                  left: 10,
-                  bottom: 20,
-                }}
+                margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
               >
                 <defs>
                   <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
@@ -142,8 +134,7 @@ const Laporan = () => {
                           : "url(#saldoGradient)"
                       }
                       style={{
-                        filter:
-                          "drop-shadow(0px 4px 6px rgba(0,0,0,0.15))",
+                        filter: "drop-shadow(0px 4px 6px rgba(0,0,0,0.15))",
                       }}
                     />
                   ))}
@@ -157,7 +148,8 @@ const Laporan = () => {
                 <strong>Pemasukan:</strong> {formatRupiah(data[0]?.jumlah || 0)}
               </p>
               <p className="text-gray-800 dark:text-gray-300 text-sm sm:text-base">
-                <strong>Pengeluaran:</strong> {formatRupiah(data[1]?.jumlah || 0)}
+                <strong>Pengeluaran:</strong>{" "}
+                {formatRupiah(data[1]?.jumlah || 0)}
               </p>
               <p className="text-gray-900 dark:text-neon-green font-bold text-base sm:text-lg mt-2">
                 💰 Saldo Akhir: {formatRupiah(data[2]?.jumlah || 0)}
