@@ -3,10 +3,6 @@ CREATE DATABASE IF NOT EXISTS finance_app
   COLLATE utf8mb4_general_ci;
 
 USE finance_app;
-
--- =========================================================
--- TABLE: transactions
--- =========================================================
 DROP TABLE IF EXISTS transactions;
 
 CREATE TABLE transactions (
