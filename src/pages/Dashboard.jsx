@@ -1,90 +1,126 @@
-import { useEffect, useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, PiggyBank } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import Layout from "../components/Layout";
+import axios from "axios";
 import { API_BASE_URL } from "../api";
+import { motion } from "framer-motion";
+import { ArrowDownCircle, ArrowUpCircle, Wallet } from "lucide-react";
 
 const Dashboard = () => {
-  const [animated, setAnimated] = useState({
-    income: 0,
-    expense: 0,
+  const [summary, setSummary] = useState({
+    total_income: 0,
+    total_expense: 0,
     balance: 0,
   });
 
-  const formatRupiah = (angka) => {
-    if (isNaN(angka) || angka === null) return "Rp 0";
-    return new Intl.NumberFormat("id-ID", {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const formatRupiah = (num) => {
+    const parsed = parseFloat(num);
+    if (isNaN(parsed)) return "Rp 0";
+    return parsed.toLocaleString("id-ID", {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
-    }).format(Number(angka));
-  };
-
-  const animateValue = (key, target) => {
-    const duration = 1000;
-    const start = 0;
-    const startTime = performance.now();
-
-    const step = (timestamp) => {
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const value = Math.floor(eased * (target - start) + start);
-      setAnimated((prev) => ({ ...prev, [key]: value }));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-
-    requestAnimationFrame(step);
+    });
   };
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/transactions/summary`)
-      .then((res) => res.json())
-      .then((data) => {
-        animateValue("income", Number(data.total_income || 0));
-        animateValue("expense", Number(data.total_expense || 0));
-        animateValue("balance", Number(data.balance || 0));
-      })
-      .catch((err) => console.error("❌ Gagal fetch summary:", err));
-  }, []);
-
-  const Card = ({ title, value, color, icon }) => (
-    <div
-      className={`w-full flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg border-l-8 ${color} px-4 sm:px-6 py-3 sm:py-4 transition-all duration-300`}
-    >
-      <div className="flex flex-col text-left w-full">
-        <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-1">
-          {title}
-        </p>
-        <h2 className="font-bold text-gray-900 dark:text-neon-green text-xl sm:text-2xl md:text-3xl tracking-tight leading-tight">
-          {formatRupiah(value)}
-        </h2>
-      </div>
-      <div className="ml-3 flex-shrink-0">{icon}</div>
-    </div>
-  );
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/transactions/summary`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSummary(res.data);
+      } catch (error) {
+        console.error("❌ Gagal mengambil data summary:", error);
+      }
+    };
+    fetchSummary();
+  }, [token]);
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4">Dashboard</h1>
-      <div className="flex flex-col gap-4 sm:gap-6">
-        <Card
-          title="Pemasukan"
-          value={animated.income}
-          color="border-green-500"
-          icon={<ArrowDownCircle className="text-green-500" size={32} />}
-        />
-        <Card
-          title="Pengeluaran"
-          value={animated.expense}
-          color="border-red-500"
-          icon={<ArrowUpCircle className="text-red-500" size={32} />}
-        />
-        <Card
-          title="Saldo"
-          value={animated.balance}
-          color="border-blue-500"
-          icon={<PiggyBank className="text-yellow-500" size={32} />}
-        />
-      </div>
+    <Layout>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="space-y-6"
+      >
+        {/* Greeting */}
+
+      {/* Summary Cards */}
+<div className="grid grid-cols-1 gap-4">
+  {/* Total Pemasukan */}
+  <motion.div
+    whileHover={{ scale: 1.02 }}
+    transition={{ type: "spring", stiffness: 200 }}
+    className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md border-t-4 border-green-500 dark:border-[#39FF14]"
+  >
+    <div className="flex flex-col items-center justify-center text-center space-y-1">
+      <ArrowDownCircle size={28} className="text-green-500 dark:text-[#39FF14]" />
+      <h3 className="text-gray-700 dark:text-gray-300 font-semibold text-sm">
+        Total Pemasukan
+      </h3>
+      <p className="text-2xl font-bold text-green-600 dark:text-[#39FF14]">
+        {formatRupiah(summary.total_income)}
+      </p>
     </div>
+  </motion.div>
+
+  {/* Total Pengeluaran */}
+  <motion.div
+    whileHover={{ scale: 1.02 }}
+    transition={{ type: "spring", stiffness: 200 }}
+    className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md border-t-4 border-red-500 dark:border-red-400/70"
+  >
+    <div className="flex flex-col items-center justify-center text-center space-y-1">
+      <ArrowUpCircle size={28} className="text-red-500 dark:text-red-400" />
+      <h3 className="text-gray-700 dark:text-gray-300 font-semibold text-sm">
+        Total Pengeluaran
+      </h3>
+      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+        {formatRupiah(summary.total_expense)}
+      </p>
+    </div>
+  </motion.div>
+
+  {/* Saldo Sekarang */}
+  <motion.div
+    whileHover={{ scale: 1.02 }}
+    transition={{ type: "spring", stiffness: 200 }}
+    className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md border-t-4 border-blue-500 dark:border-[#39FF14]/60"
+  >
+    <div className="flex flex-col items-center justify-center text-center space-y-1">
+      <Wallet size={28} className="text-blue-500 dark:text-[#39FF14]" />
+      <h3 className="text-gray-700 dark:text-gray-300 font-semibold text-sm">
+        Saldo Sekarang
+      </h3>
+      <p className="text-2xl font-bold text-blue-600 dark:text-[#39FF14]">
+        {formatRupiah(summary.balance)}
+      </p>
+    </div>
+  </motion.div>
+</div>
+
+
+        {/* Motivation Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="p-6 bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-[#39FF14]/30 dark:to-[#39FF14]/10 rounded-xl text-white dark:text-[#39FF14] shadow-lg"
+        >
+          <h3 className="text-lg font-semibold mb-2">
+            💡 Tips Keuangan Hari Ini
+          </h3>
+          <p className="text-sm leading-relaxed dark:text-[#39FF14]/90">
+            “Jangan hanya mencatat pengeluaran, tapi juga evaluasi setiap bulan.
+            Dengan begitu kamu bisa melihat kemana uangmu benar-benar pergi.”
+          </p>
+        </motion.div>
+      </motion.div>
+    </Layout>
   );
 };
 

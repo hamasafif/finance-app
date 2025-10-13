@@ -1,88 +1,108 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import {
-  Home,
-  Database,
-  ArrowDownCircle,
-  PieChart,
-  LogOut,
-  X,
-} from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { LayoutDashboard, ListOrdered, PlusCircle, FileText, LogOut } from "lucide-react";
 
-export default function Sidebar({ isOpen, setIsOpen }) {
-  const location = useLocation();
+const Sidebar = () => {
+  const navigate = useNavigate();
 
-  const menus = [
-    { name: "Dashboard", path: "/", icon: <Home size={18} /> },
-    { name: "Data Transaksi", path: "/data-transaksi", icon: <Database size={18} /> },
-    { name: "Input Data", path: "/input-data", icon: <ArrowDownCircle size={18} /> },
-    { name: "Laporan", path: "/laporan", icon: <PieChart size={18} /> },
-  ];
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
   return (
-    <>
-      {/* Overlay untuk mode mobile */}
-      {isOpen && (
-        <div
-          onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-        />
-      )}
+<div className="min-h-screen w-64 bg-gradient-to-b from-blue-600 to-blue-800 dark:from-gray-900 dark:to-black text-white dark:text-[#39FF14] shadow-xl flex flex-col justify-between transition-all duration-300">
+      {/* Logo / Brand */}
+      <div>
+        <div className="flex items-center gap-3 p-5 border-b border-blue-400/30 dark:border-[#39FF14]/20">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/4248/4248443.png"
+            alt="logo"
+            className="w-8 h-8 animate-pulse"
+          />
+          <h1 className="text-lg font-semibold tracking-wide">
+            WR Junior <br />
+            <span className="text-sm opacity-80">Finance</span>
+          </h1>
+        </div>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed md:static top-0 left-0 h-full z-50 transition-transform duration-300 transform
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0 w-64 md:w-60
-        bg-gradient-to-b from-blue-600 to-blue-800
-        dark:from-gray-900 dark:to-black
-        text-white flex flex-col shadow-lg`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-blue-500 dark:border-gray-800">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">💸</span>
-            <span className="text-lg font-bold tracking-wide">WR Junior - Finance</span>
-          </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="md:hidden p-2 hover:bg-blue-700 dark:hover:bg-gray-700 rounded transition"
+        {/* Menu */}
+        <nav className="flex flex-col mt-4">
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-6 py-3 transition-colors duration-300 
+              ${
+                isActive
+                  ? "bg-blue-700 dark:bg-[#39FF14]/10 text-white dark:text-[#39FF14]"
+                  : "text-gray-100 dark:text-gray-300 hover:bg-blue-700/60 dark:hover:bg-[#39FF14]/10"
+              }`
+            }
           >
-            <X size={20} />
-          </button>
-        </div>
+            <LayoutDashboard size={20} />
+            Dashboard
+          </NavLink>
 
-        {/* Menu navigasi */}
-        <nav className="flex-1 py-4 overflow-y-auto">
-          {menus.map((menu) => {
-            const isActive = location.pathname === menu.path;
-            return (
-              <Link
-                key={menu.name}
-                to={menu.path}
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-3 px-5 py-3 mx-3 my-1 rounded-md text-sm font-medium transition-all duration-200
-                  ${
-                    isActive
-                      ? "bg-blue-700 dark:bg-neon-green text-white dark:text-black shadow-inner"
-                      : "hover:bg-blue-700 dark:hover:bg-gray-800 text-gray-100 dark:text-gray-300"
-                  }`}
-              >
-                {menu.icon}
-                <span>{menu.name}</span>
-              </Link>
-            );
-          })}
+          <NavLink
+            to="/datatransaksi"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-6 py-3 transition-colors duration-300 
+              ${
+                isActive
+                  ? "bg-blue-700 dark:bg-[#39FF14]/10 text-white dark:text-[#39FF14]"
+                  : "text-gray-100 dark:text-gray-300 hover:bg-blue-700/60 dark:hover:bg-[#39FF14]/10"
+              }`
+            }
+          >
+            <ListOrdered size={20} />
+            Data Transaksi
+          </NavLink>
+
+          <NavLink
+            to="/inputdata"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-6 py-3 transition-colors duration-300 
+              ${
+                isActive
+                  ? "bg-blue-700 dark:bg-[#39FF14]/10 text-white dark:text-[#39FF14]"
+                  : "text-gray-100 dark:text-gray-300 hover:bg-blue-700/60 dark:hover:bg-[#39FF14]/10"
+              }`
+            }
+          >
+            <PlusCircle size={20} />
+            Input Data
+          </NavLink>
+
+          <NavLink
+            to="/laporan"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-6 py-3 transition-colors duration-300 
+              ${
+                isActive
+                  ? "bg-blue-700 dark:bg-[#39FF14]/10 text-white dark:text-[#39FF14]"
+                  : "text-gray-100 dark:text-gray-300 hover:bg-blue-700/60 dark:hover:bg-[#39FF14]/10"
+              }`
+            }
+          >
+            <FileText size={20} />
+            Laporan
+          </NavLink>
         </nav>
+      </div>
 
-        {/* Tombol Keluar */}
-        <div className="p-4 border-t border-blue-500 dark:border-gray-800">
-          <button className="w-full flex items-center justify-center gap-2 py-2 text-sm rounded-md bg-blue-900 hover:bg-blue-700 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-300">
-            <LogOut size={16} />
-            <span>Keluar</span>
-          </button>
-        </div>
-      </aside>
-    </>
+      {/* Logout */}
+      <div className="p-5 border-t border-blue-400/30 dark:border-[#39FF14]/20">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 bg-blue-700 dark:bg-[#39FF14]/20 dark:hover:bg-[#39FF14]/30 hover:bg-blue-800 py-2 rounded-lg transition-all"
+        >
+          <LogOut size={18} />
+          <span className="font-medium">Keluar</span>
+        </button>
+      </div>
+    </div>
   );
-}
+};
+
+export default Sidebar;

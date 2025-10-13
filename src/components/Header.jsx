@@ -1,38 +1,78 @@
-import React from "react";
-import { Sun, Moon, UserCircle2, Menu } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Menu, Sun, Moon } from "lucide-react";
 
-export default function Header({ darkMode, setDarkMode, setSidebarOpen }) {
+const Header = ({ toggleSidebar }) => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [darkMode, setDarkMode] = useState(false);
+
+  // 🔹 Load theme dari localStorage saat pertama kali
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark");
+      setDarkMode(true);
+    }
+  }, []);
+
+  // 🔹 Toggle theme
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+
+    if (newMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
+
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-sm flex items-center justify-between px-6 py-3 transition-colors duration-500">
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex items-center justify-between bg-white dark:bg-gray-900 p-4 shadow-md rounded-xl mx-4 mt-4 transition-all duration-300 border border-gray-200 dark:border-gray-800"
+    >
+      {/* Kiri: tombol hamburger (mobile only) + sapaan */}
       <div className="flex items-center gap-3">
-        {/* Hamburger Button */}
         <button
-          onClick={() => setSidebarOpen(true)}
-          className="md:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+          onClick={toggleSidebar}
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
         >
-          <Menu className="text-gray-700 dark:text-neon-green" size={20} />
+          <Menu size={22} className="text-gray-700 dark:text-gray-200" />
         </button>
-        <h1 className="font-semibold text-lg dark:text-neon-green hidden md:block">
-          Finance Manager
-        </h1>
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-[#39FF14]">
+          Selamat Datang, {user.name || "User"} 👋
+        </h2>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Kanan: toggle mode + tanggal */}
+      <div className="flex items-center gap-4">
         <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+          onClick={toggleDarkMode}
+          className="p-2 rounded-full bg-gray-100 dark:bg-[#39FF14]/10 hover:scale-110 transition-transform duration-200"
         >
           {darkMode ? (
-            <Sun className="text-neon-green" />
+            <Sun size={20} className="text-[#39FF14]" />
           ) : (
-            <Moon className="text-gray-800" />
+            <Moon size={20} className="text-gray-600" />
           )}
         </button>
-        <div className="flex items-center gap-2 text-gray-700 dark:text-neon-green">
-          <UserCircle2 size={30} />
-          <span className="hidden sm:inline">Admin</span>
+
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          {new Date().toLocaleDateString("id-ID", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
         </div>
       </div>
-    </header>
+    </motion.header>
   );
-}
+};
+
+export default Header;

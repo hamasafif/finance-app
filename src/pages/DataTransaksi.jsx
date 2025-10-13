@@ -1,120 +1,151 @@
 import React, { useEffect, useState } from "react";
+import Layout from "../components/Layout";
 import axios from "axios";
 import { API_BASE_URL } from "../api";
+import { motion } from "framer-motion";
+import { Search, Calendar, Loader2 } from "lucide-react";
 
 const DataTransaksi = () => {
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+
+  const token = localStorage.getItem("token");
+
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/transactions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTransactions(res.data);
+    } catch (error) {
+      console.error("❌ Gagal mengambil data transaksi:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // ✅ gunakan API_BASE_URL agar fleksibel (auto dari api.js)
-        const res = await axios.get(`${API_BASE_URL}/transactions`);
-        setTransactions(res.data);
-      } catch (err) {
-        console.error("❌ Gagal mengambil data transaksi:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchTransactions();
   }, []);
 
-  // Format tanggal ke gaya Indonesia
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
+  // Filter transaksi berdasarkan input
+  const filteredData = transactions.filter((t) => {
+    const matchText = t.desc.toLowerCase().includes(search.toLowerCase());
+    const matchDate = filterDate ? t.date.startsWith(filterDate) : true;
+    return matchText && matchDate;
+  });
+
+  const formatCurrency = (num) =>
+    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(num);
+
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("id-ID", {
       day: "2-digit",
-      month: "short",
+      month: "long",
       year: "numeric",
     });
   };
 
-  // Format angka ke Rupiah
-  const formatRupiah = (number) => {
-    if (!number && number !== 0) return "-";
-    return new Intl.NumberFormat("id-ID").format(number);
-  };
-
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-green-400">
-        Data Transaksi
-      </h2>
-
-      {/* Wrapper utama agar tabel bisa discroll dengan lancar */}
-      <div
-        className="w-full max-w-full overflow-x-scroll overflow-y-scroll rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
-        style={{
-          maxHeight: "70vh",
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "thin",
-        }}
+    <Layout>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg"
       >
-        {loading ? (
-          <div className="flex justify-center items-center h-40 text-gray-500 dark:text-gray-400 italic">
-            Memuat data transaksi...
-          </div>
-        ) : (
-          <table className="min-w-[900px] w-full border-collapse text-sm sm:text-base">
-            <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0 z-10">
-              <tr className="text-left text-gray-700 dark:text-gray-200">
-                <th className="p-3 whitespace-nowrap">TANGGAL</th>
-                <th className="p-3 whitespace-nowrap">KETERANGAN</th>
-                <th className="p-3 whitespace-nowrap">TIPE</th>
-                <th className="p-3 whitespace-nowrap text-right">JUMLAH (RP)</th>
-              </tr>
-            </thead>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
+          📋 Data Transaksi
+        </h2>
 
-            <tbody className="bg-white dark:bg-gray-900">
-              {transactions.length === 0 ? (
+        {/* Filter & Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Calendar className="text-gray-500" size={18} />
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="border border-gray-300 dark:border-gray-700 rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-700 rounded-lg p-2 w-full sm:w-1/3 dark:bg-gray-700">
+            <Search className="text-gray-500" size={18} />
+            <input
+              type="text"
+              placeholder="Cari deskripsi..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-gray-800 dark:text-white"
+            />
+          </div>
+        </div>
+
+        {/* Tabel Data */}
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          {loading ? (
+            <div className="flex justify-center items-center py-10 text-gray-600 dark:text-gray-300">
+              <Loader2 className="animate-spin mr-2" /> Memuat data...
+            </div>
+          ) : filteredData.length === 0 ? (
+            <p className="text-center py-10 text-gray-500 dark:text-gray-400">
+              Tidak ada data transaksi ditemukan
+            </p>
+          ) : (
+            <table className="w-full text-sm text-gray-700 dark:text-gray-300">
+              <thead className="bg-indigo-600 text-white">
                 <tr>
-                  <td
-                    colSpan="4"
-                    className="text-center p-4 text-gray-500 dark:text-gray-400 italic"
-                  >
-                    Tidak ada data transaksi
-                  </td>
+                  <th className="py-3 px-4 text-left">Tanggal</th>
+                  <th className="py-3 px-4 text-left">Deskripsi</th>
+                  <th className="py-3 px-4 text-center">Tipe</th>
+                  <th className="py-3 px-4 text-right">Jumlah</th>
                 </tr>
-              ) : (
-                transactions.map((t, i) => (
+              </thead>
+              <tbody>
+                {filteredData.map((t, index) => (
                   <tr
-                    key={i}
-                    className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                    key={index}
+                    className={`${
+                      index % 2 === 0
+                        ? "bg-gray-50 dark:bg-gray-800/50"
+                        : "bg-white dark:bg-gray-900/50"
+                    } hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition`}
                   >
-                    <td className="p-3 whitespace-nowrap text-gray-800 dark:text-gray-200">
-                      {formatDate(t.date)}
-                    </td>
-                    <td className="p-3 text-gray-800 dark:text-gray-300 whitespace-nowrap">
-                      {t.desc || "-"}
+                    <td className="py-3 px-4">{formatDate(t.date)}</td>
+                    <td className="py-3 px-4">{t.desc}</td>
+                    <td className="py-3 px-4 text-center">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          t.type === "income"
+                            ? "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-300"
+                            : "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-300"
+                        }`}
+                      >
+                        {t.type === "income" ? "Pemasukan" : "Pengeluaran"}
+                      </span>
                     </td>
                     <td
-                      className={`p-3 font-semibold ${
+                      className={`py-3 px-4 text-right font-semibold ${
                         t.type === "income"
                           ? "text-green-500"
                           : "text-red-500"
                       }`}
                     >
-                      {t.type === "income" ? "Pemasukan" : "Pengeluaran"}
-                    </td>
-                    <td className="p-3 text-right text-gray-900 dark:text-gray-100 font-medium whitespace-nowrap">
-                      Rp {formatRupiah(t.amount)}
+                      {formatCurrency(t.amount)}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Catatan bawah */}
-      <p className="text-xs italic mt-2 text-gray-500 dark:text-gray-400 text-center">
-        *Scroll ke kanan, kiri, atas, atau bawah jika tabel tidak muat di layar
-      </p>
-    </div>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </motion.div>
+    </Layout>
   );
 };
 
