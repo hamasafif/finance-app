@@ -13,7 +13,5 @@ export default {
       },
     },
   },
-  plugins: [
-    scrollbar({ nocompatible: true }),
-  ],
+  plugins: [],
 };
