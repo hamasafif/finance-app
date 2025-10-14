@@ -1,4 +1,4 @@
-// backend/initDatabase.js
+// backend/database.js
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
@@ -14,9 +14,9 @@ const {
 
 (async () => {
   try {
-    console.log("🚀 Memulai proses setup database...");
+    console.log("🚀 Memulai setup database...");
 
-    // 1) koneksi awal tanpa database (untuk CREATE DATABASE)
+    // 1️⃣ Koneksi awal (tanpa DB) untuk membuat database
     const conn = await mysql.createConnection({
       host: DB_HOST,
       user: DB_USER,
@@ -24,11 +24,10 @@ const {
       multipleStatements: true,
     });
 
-    // 2) buat database bila belum ada
     await conn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`);
     console.log(`✅ Database "${DB_NAME}" siap.`);
 
-    // 3) koneksi ke database yang baru dibuat
+    // 2️⃣ Koneksi ke database
     const db = await mysql.createConnection({
       host: DB_HOST,
       user: DB_USER,
@@ -37,53 +36,53 @@ const {
       multipleStatements: true,
     });
 
-    // 4) buat tabel Users
+    // 3️⃣ Buat tabel Users
     await db.query(`
-      CREATE TABLE IF NOT EXISTS \`Users\` (
+      CREATE TABLE IF NOT EXISTS Users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         email VARCHAR(150) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
-        role ENUM('user','admin') DEFAULT 'user',
+        role ENUM('user', 'admin') DEFAULT 'user',
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
     console.log("✅ Tabel 'Users' siap.");
 
-    // 5) buat tabel Transactions
-    // NOTE: gunakan 'description' bukan 'desc' karena desc adalah kata kunci SQL
+    // 4️⃣ Buat tabel Transactions
     await db.query(`
-      CREATE TABLE IF NOT EXISTS \`Transactions\` (
+      CREATE TABLE IF NOT EXISTS Transactions (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
-        type ENUM('income','expense') NOT NULL,
+        type ENUM('income', 'expense') NOT NULL,
         description TEXT,
         amount DECIMAL(12,2) NOT NULL,
         date DATE NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        CONSTRAINT fk_transactions_user FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB;
+        FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
     console.log("✅ Tabel 'Transactions' siap.");
 
-    // 6) tambahkan admin default kalau belum ada
+    // 5️⃣ Buat admin default jika belum ada
     const [admins] = await db.query(`SELECT id FROM Users WHERE role = 'admin' LIMIT 1;`);
     if (!admins || admins.length === 0) {
       const hashed = await bcrypt.hash("admin123", 10);
       await db.query(
-        `INSERT INTO Users (name, email, password, role) VALUES (?, ?, ?, ?);`,
+        `INSERT INTO Users (name, email, password, role)
+         VALUES (?, ?, ?, ?);`,
         ["Administrator", "admin@financeapp.com", hashed, "admin"]
       );
-      console.log("👑 Admin default ditambahkan: email=admin@financeapp.com | password=admin123");
+      console.log("👑 Admin default dibuat: email=admin@financeapp.com | password=admin123");
     } else {
-      console.log("ℹ️ Admin default sudah ada, skip penambahan.");
+      console.log("ℹ️ Admin default sudah ada, lewati pembuatan.");
     }
 
     await db.end();
     await conn.end();
-    console.log("🎉 Database setup selesai! Semua tabel siap digunakan ✅");
+    console.log("🎉 Setup database selesai! Semua tabel sesuai struktur terbaru ✅");
   } catch (error) {
     console.error("❌ Gagal setup database:", error);
     process.exit(1);
