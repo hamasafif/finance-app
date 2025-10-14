@@ -8,7 +8,7 @@ import { FilePlus } from "lucide-react";
 const InputData = () => {
   const [form, setForm] = useState({
     date: "",
-    desc: "",
+    description: "",
     type: "income",
     amount: "",
   });
@@ -17,7 +17,7 @@ const InputData = () => {
   const [message, setMessage] = useState("");
   const token = localStorage.getItem("token");
 
-  // ✅ Format nominal langsung jadi “10.000” dst
+  // ✅ Update state & format nominal
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -30,6 +30,7 @@ const InputData = () => {
     }
   };
 
+  // ✅ Kirim data ke backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -45,7 +46,7 @@ const InputData = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessage("✅ Transaksi berhasil disimpan!");
-      setForm({ date: "", desc: "", type: "income", amount: "" });
+      setForm({ date: "", description: "", type: "income", amount: "" });
     } catch (error) {
       console.error("❌ Gagal simpan transaksi:", error);
       setMessage("❌ Gagal menyimpan transaksi");
@@ -91,9 +92,9 @@ const InputData = () => {
             </label>
             <input
               type="text"
-              name="desc"
+              name="description"
               placeholder="Contoh: Gaji Bulanan / Beli Makan"
-              value={form.desc}
+              value={form.description}
               onChange={handleChange}
               className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-[#39FF14] placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-[#39FF14]/70 outline-none transition-all"
             />

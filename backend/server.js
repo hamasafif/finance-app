@@ -6,13 +6,13 @@ import sequelize from "./db.js";
 // Routes
 import transactionRoutes from "./routes/Transaction.js";
 import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/User.js"; // 🆕 route admin
 
-// Load .env (optional, amanin DB credentials)
 dotenv.config();
 
 const app = express();
 
-// ✅ Konfigurasi CORS fleksibel: localhost, LAN, domain, tunnel
+// ✅ Konfigurasi CORS
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -31,10 +31,9 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
 
-// ✅ Middleware bawaan
 app.use(express.json());
 
-// ✅ Tes koneksi ke database
+// ✅ Tes koneksi DB
 (async () => {
   try {
     await sequelize.authenticate();
@@ -44,16 +43,15 @@ app.use(express.json());
   }
 })();
 
-// ✅ Register routes
-app.use("/api/transactions", transactionRoutes);
+// ✅ Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/users", userRoutes); // 🆕 admin route
 
-// ✅ Route root (cek server)
 app.get("/", (req, res) => {
   res.json({ message: "🚀 Finance App Backend Aktif dan Siap!" });
 });
 
-// ✅ Jalankan server di semua interface
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server berjalan di http://0.0.0.0:${PORT}`);

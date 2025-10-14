@@ -5,19 +5,32 @@ import DataTransaksi from "./pages/DataTransaksi";
 import Laporan from "./pages/Laporan";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import AdminDashboard from "./pages/AdminDashboard"; // 🆕 Tambahkan halaman admin
 
 function App() {
+  // Ambil data login dari localStorage
   const token = localStorage.getItem("token");
+  const userData = localStorage.getItem("user");
+  const role = userData ? JSON.parse(userData).role : null;
 
   return (
     <Router>
       <Routes>
-        {/* Auth */}
+        {/* ===================== AUTH ROUTES ===================== */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* Protected Pages */}
-        {token ? (
+        {/* ===================== ADMIN ROUTES ===================== */}
+        {token && role === "admin" && (
+          <>
+            <Route path="/admin" element={<AdminDashboard />} />
+            {/* Redirect semua route lain ke admin */}
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </>
+        )}
+
+        {/* ===================== USER ROUTES ===================== */}
+        {token && role === "user" && (
           <>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/inputdata" element={<InputData />} />
@@ -26,9 +39,10 @@ function App() {
             {/* Default redirect */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </>
-        ) : (
-          <Route path="*" element={<Navigate to="/login" replace />} />
         )}
+
+        {/* ===================== GUEST (Belum Login) ===================== */}
+        {!token && <Route path="*" element={<Navigate to="/login" replace />} />}
       </Routes>
     </Router>
   );

@@ -1,83 +1,92 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { motion } from "framer-motion";
-import { API_BASE_URL } from "../api";
+import api, { API_BASE_URL } from "../api/axios";
 import { LogIn, Mail, Lock } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // 🟢 Handle login submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      const res = await axios.post(
-        `${API_BASE_URL.replace("/api", "")}/api/auth/login`,
-        { email, password }
-      );
-      localStorage.setItem("token", res.data.token);
-      navigate("/dashboard");
+      const res = await api.post("/auth/login", { email, password });
+      const { token, user } = res.data;
+
+      if (!token || !user) throw new Error("Token tidak diterima dari server.");
+
+      // ✅ Simpan token & data user
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("role", user.role);
+      localStorage.setItem("api_base", API_BASE_URL);
+
+      console.log("✅ Login sukses:", user);
+
+      // ✅ Redirect sesuai role
+      if (user.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Login gagal");
+      console.error("❌ Error login:", err);
+      const msg =
+        err.response?.data?.message ||
+        (err.code === "ERR_NETWORK"
+          ? "Server tidak dapat dihubungi. Coba lagi nanti."
+          : "Email atau password salah.");
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-700 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-700">
       <motion.div
-        initial={{ opacity: 0, y: -40 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 sm:p-10 w-[90%] max-w-md relative overflow-hidden"
+        transition={{ duration: 0.5 }}
+        className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 w-[90%] max-w-md"
       >
-        {/* Decorative circles */}
-        <motion.div
-          className="absolute -top-10 -left-10 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 4, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-0 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl"
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 6, repeat: Infinity }}
-        />
+        <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white mb-6 flex items-center justify-center gap-2">
+          <LogIn size={26} className="text-blue-600" /> Masuk Akun
+        </h2>
 
-        {/* Title */}
-        <motion.h2
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-3xl font-bold text-center mb-6 text-gray-800 dark:text-white flex items-center justify-center gap-2"
-        >
-          <LogIn className="text-blue-500" size={26} /> Masuk Akun
-        </motion.h2>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-          <div className="flex items-center border dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-500">
-            <Mail className="text-gray-400" size={18} />
+        {/* Form Login */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex items-center border dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-700">
+            <Mail size={18} className="text-gray-400" />
             <input
               type="email"
               placeholder="Email"
+              className="w-full ml-2 bg-transparent outline-none text-gray-700 dark:text-gray-100"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full ml-2 bg-transparent outline-none text-gray-700 dark:text-gray-100"
               required
+              autoComplete="username"
             />
           </div>
 
-          <div className="flex items-center border dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-500">
-            <Lock className="text-gray-400" size={18} />
+          <div className="flex items-center border dark:border-gray-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-700">
+            <Lock size={18} className="text-gray-400" />
             <input
               type="password"
               placeholder="Password"
+              className="w-full ml-2 bg-transparent outline-none text-gray-700 dark:text-gray-100"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full ml-2 bg-transparent outline-none text-gray-700 dark:text-gray-100"
               required
+              autoComplete="current-password"
             />
           </div>
 
@@ -85,46 +94,34 @@ const LoginPage = () => {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-red-500 text-sm text-center"
+              className="text-red-500 text-center text-sm"
             >
               {error}
             </motion.p>
           )}
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 300 }}
+          <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold shadow-md transition"
+            disabled={loading}
+            className={`w-full py-2.5 rounded-lg font-semibold transition text-white ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Masuk
-          </motion.button>
+            {loading ? "Memproses..." : "Masuk"}
+          </button>
         </form>
 
-        {/* Separator */}
-        <div className="flex items-center justify-center my-4">
-          <div className="h-px w-16 bg-gray-300 dark:bg-gray-600"></div>
-          <span className="mx-2 text-gray-500 text-sm">atau</span>
-          <div className="h-px w-16 bg-gray-300 dark:bg-gray-600"></div>
-        </div>
-
-        {/* Register Link */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-center text-gray-700 dark:text-gray-300"
-        >
+        <div className="text-center mt-5 text-sm text-gray-600">
           Belum punya akun?{" "}
           <button
-            type="button"
             onClick={() => navigate("/register")}
-            className="text-blue-600 hover:text-blue-700 font-semibold underline"
+            className="text-blue-600 font-semibold underline"
           >
             Daftar Sekarang
           </button>
-        </motion.p>
+        </div>
       </motion.div>
     </div>
   );

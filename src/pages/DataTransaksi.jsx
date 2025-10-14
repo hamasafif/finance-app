@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
-import axios from "axios";
-import { API_BASE_URL } from "../api";
+import api from "../api/axios";
 import { motion } from "framer-motion";
 import { Search, Calendar, Loader2 } from "lucide-react";
 
@@ -10,18 +9,23 @@ const DataTransaksi = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
-
+  // 🔹 Ambil transaksi user login
   const fetchTransactions = async () => {
     setLoading(true);
+    setError("");
     try {
-      const res = await axios.get(`${API_BASE_URL}/transactions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/transactions");
       setTransactions(res.data);
-    } catch (error) {
-      console.error("❌ Gagal mengambil data transaksi:", error);
+    } catch (err) {
+      console.error("❌ Gagal mengambil data transaksi:", err);
+      const msg =
+        err.response?.data?.message ||
+        (err.response?.status === 404
+          ? "Endpoint transaksi tidak ditemukan di server."
+          : "Gagal memuat data transaksi. Periksa koneksi backend.");
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -31,16 +35,23 @@ const DataTransaksi = () => {
     fetchTransactions();
   }, []);
 
-  // Filter transaksi berdasarkan input
+  // 🔍 Filter berdasarkan teks & tanggal
   const filteredData = transactions.filter((t) => {
-    const matchText = t.desc.toLowerCase().includes(search.toLowerCase());
+    const desc =
+      (t.description || t.desc || "").toString().toLowerCase();
+    const matchText = desc.includes(search.toLowerCase());
     const matchDate = filterDate ? t.date.startsWith(filterDate) : true;
     return matchText && matchDate;
   });
 
+  // 💰 Format rupiah
   const formatCurrency = (num) =>
-    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(num);
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    }).format(num);
 
+  // 📅 Format tanggal
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("id-ID", {
@@ -92,6 +103,10 @@ const DataTransaksi = () => {
             <div className="flex justify-center items-center py-10 text-gray-600 dark:text-gray-300">
               <Loader2 className="animate-spin mr-2" /> Memuat data...
             </div>
+          ) : error ? (
+            <p className="text-center py-10 text-red-500 dark:text-red-400">
+              {error}
+            </p>
           ) : filteredData.length === 0 ? (
             <p className="text-center py-10 text-gray-500 dark:text-gray-400">
               Tidak ada data transaksi ditemukan
@@ -117,7 +132,7 @@ const DataTransaksi = () => {
                     } hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition`}
                   >
                     <td className="py-3 px-4">{formatDate(t.date)}</td>
-                    <td className="py-3 px-4">{t.desc}</td>
+                    <td className="py-3 px-4">{t.description || "-"}</td>
                     <td className="py-3 px-4 text-center">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
